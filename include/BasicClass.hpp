@@ -8,10 +8,14 @@ class Instruction;
 
 class Value {
     private:
+        std::vector<Use*> Uselist;
+    protected:
         std::string name;
     public:
-        bool hasName() const;
-        std::string getName() const;
-        void setName(std::string name);
+        bool HasName() const;
+        std::string GetName() const;
+        void SetName(std::string name);
+
+        std::vector<Use*> GetUses() const;
         
 };
