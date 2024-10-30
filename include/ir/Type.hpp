@@ -1,17 +1,18 @@
-//created by AI，needed to be fixed
+// TODO created by AI,needed to be fixed 
 #pragma once
 #include <string>
 
-class Type {
-public:
-    enum TypeID {
+enum TypeID {
         VoidTyID,
         IntegerTyID,
         FloatTyID,
         DoubleTyID,
         // Add more types as needed
     };
-
+    
+class Type {
+public:
+    
 private:
     TypeID id;
 
