@@ -1,3 +1,4 @@
+//TODO COPY FROM GPT5.0,NEED TO BE MODIFIED
 #pragma once
 #include <vector>
 #include <cassert>
@@ -15,6 +16,7 @@ class User;
 class Value;
 class BasicBlock;
 class Function;
+class Inst;
 class Use
 {
     public:
