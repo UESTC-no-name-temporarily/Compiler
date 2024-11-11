@@ -1,127 +1,52 @@
-#include <iostream>
+#pragma once
+#include "Type.hpp" 
+#include <vector>
+#include <algorithm>
+#include <set>
+#include "../utils/Singleton.hpp"
+#include <memory>
+#include "BasicClass.hpp"
+class Variable;
 
-class Module;
-class BasicBlock;
-class Function;
-class Inst;
-
-class Inst
-{
-    enum OpID
-    {
-        None,
-        // Terminators
-        Ret,
-        Br,
-        Switch,
-        IndirectBr,
-        Invoke,
-        Resume,
-        Unreachable,
-        // Standard binary operators...
-        Add,
-        FAdd,
-        Sub,
-        FSub,
-        Mul,
-        FMul,
-        UDiv,
-        SDiv,
-        FDiv,
-        URem,
-        SRem,
-        FRem,
-        // Logical operators...
-        And,
-        Or,
-        Xor,
-        // Memory operators...
-        Alloca,
-        Load,
-        Store,
-        GetElementPtr,
-        Fence,
-        AtomicCmpXchg,
-        AtomicRMW,
-        // Cast operators...
-        Trunc,
-        ZExt,
-        SExt,
-        FPToUI,
-        FPToSI,
-        UIToFP,
-        SIToFP,
-        FPTrunc,
-        FPExt,
-        PtrToInt,
-        IntToPtr,
-        BitCast,
-        AddrSpaceCast,
-        // Other operators...
-        ICmp,
-        FCmp,
-        PHI,
-        Call,
-        Select,
-        UserOp1,
-        UserOp2,
-        VAArg,
-        ExtractElement,
-        InsertElement,
-        ShuffleVector,
-        ExtractValue,
-        InsertValue,
-        LandingPad,
-        // Vector operators
-        ExtractElementInst,
-        InsertElementInst,
-        ShuffleVectorInst,
-        ExtractValueInst,
-        InsertValueInst,
-        // Atomic operators
-        AtomicRMWInst,
-        FenceInst,
-        AtomicCmpXchgInst,
-        // Other operators
-        VAArgInst,
-        LandingPadInst,
-        // Call operators
-        CallInst,
-        InvokeInst,
-        // Terminator operators
-        ReturnInst,
-        BrInst,
-        SwitchInst,
-        IndirectBrInst,
-        ResumeInst,
-        UnreachableInst,
-        // Binary operators
-        AddInst,
-        FAddInst,
-        SubInst,
-        FSubInst,
-        MulInst,
-        FMulInst,
-        UDivInst,
-        SDivInst,
-        FDivInst,
-        URemInst,
-        SRemInst,
-        FRemInst,
-        // Logical operators
-        AndInst,
-        OrInst,
-        XorInst,
-        // Cast operators
-        TruncInst,
-        ZExtInst,
-        SExtInst,
-        FPToUIInst,
-        FPToSIInst,
-        UIToFPInst
-    };
-    bool HasSideEffect();
-    
-    public:
+class Instruction{
     
 };
+
+class BasicBlock{
+
+};
+
+class Function{
+    Function()=default;
+    ~Function()=default;
+    using Paramptr=std::unique_ptr<Value>;
+    using BBptr=std::unique_ptr<BasicBlock>;
+    std::vector<Paramptr> ParamList;
+    std::vector<BBptr> BBList;
+    public:
+    enum tag{
+        Normal,
+        UnrollBody,
+        LoopBody,
+        ParallelBody,
+        BuildIn,
+    };
+
+};
+
+class Module{
+private:
+    using Functionptr=std::unique_ptr<Function>;
+    using GlobalVariableptr=std::unique_ptr<Variable>;
+    std::vector<Functionptr> Functionlist;
+    std::vector<GlobalVariableptr> GlobalVariableList;
+public:
+    Module()=default;
+    std::set<Function*> hasinlinedFunc;
+    std::set<Function*> inlinedFunc;
+    std::set<Function*> sideeffectFunc;
+    std::vector<Function*> getFunctionList();
+    Function& FunctionGen();
+};
+
+

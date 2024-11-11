@@ -1,63 +1,90 @@
-// TODO created by AI,needed to be fixed 
 #pragma once
 #include <string>
 
 enum TypeID {
-        VoidTyID,
-        IntegerTyID,
-        FloatTyID,
-        DoubleTyID,
-        // Add more types as needed
+        Void,
+        Integer,
+        FloatingPoint,
+        Pointer,
+        Array,
+        Struct,
+        Function,
+        StackStorage,
+        Invalid,
     };
     
 class Type {
-public:
-    
 private:
-    TypeID id;
-
-protected:
-    Type(TypeID id) : id(id) {}
-
+    virtual TypeID getType() const = 0;
 public:
+    Type() = default;
+    Type(const Type&) = delete;
+    Type(Type&&) = delete;
+    Type& operator=(const Type&) = delete;
+    Type& operator=(Type&&) = delete;
     virtual ~Type() = default;
-
-    TypeID getTypeID() const { return id; }
-
-    virtual std::string getName() const = 0;
-
-    static bool isIntegerType(TypeID id) {
-        return id == IntegerTyID;
+    bool isVoid() const {
+        return getType() == TypeID::Void;
     }
-
-    static bool isFloatingPointType(TypeID id) {
-        return id == FloatTyID || id == DoubleTyID;
+    bool isInteger() const {
+        return getType() == TypeID::Integer;
     }
+    bool isFloatingPoint() const {
+        return getType() == TypeID::FloatingPoint;
+    }   
+    bool isPointer() const {
+        return getType() == TypeID::Pointer;
+    }
+    bool isArray() const {
+        return getType() == TypeID::Array;
+    }
+    bool isStruct() const {
+        return getType() == TypeID::Struct;
+    }       
+    bool isFunction() const {
+        return getType() == TypeID::Function;
+    }
+    bool isStackStorage() const {
+        return getType() == TypeID::StackStorage;
+    }
+    bool isInvalid() const {
+        return getType() == TypeID::Invalid;
+    }
+    bool isPrimitive() const {
+        return isInteger() || isFloatingPoint();
+    }
+    virtual bool isSameType(const Type& other) const = 0;
+    
 };
 
 class IntegerType : public Type {
 public:
-    IntegerType() : Type(IntegerTyID) {}
-
-    std::string getName() const override {
-        return "Integer";
+    TypeID getType() const override {
+        return TypeID::Integer;
     }
+    bool isSameType(const Type& other) const override;
 };
 
-class FloatType : public Type {
+class FloatingPointType : public Type {
 public:
-    FloatType() : Type(FloatTyID) {}
-
-    std::string getName() const override {
-        return "Float";
+    TypeID getType() const override {
+        return TypeID::FloatingPoint;
     }
+    bool isSameType(const Type& other) const override;
 };
 
-class DoubleType : public Type {
+class PointerType : public Type {
 public:
-    DoubleType() : Type(DoubleTyID) {}
-
-    std::string getName() const override {
-        return "Double";
+    TypeID getType() const override {
+        return TypeID::Pointer;
     }
+    bool isSameType(const Type& other) const override;
+};
+
+class ArrayType : public Type {
+public:
+    TypeID getType() const override {
+        return TypeID::Array;
+    }
+    bool isSameType(const Type& other) const override;
 };
