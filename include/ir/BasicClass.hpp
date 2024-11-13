@@ -14,7 +14,7 @@
 class User;
 class Value;
 class BasicBlock;
-class Function;
+class Func;
 class Use{
 public:
     ~Use(){
@@ -39,7 +39,11 @@ public:
 
 };
 class Userlist{
-//TODO finish this class
+    Use* head;
+    int size;
+public:
+    void push(Use* use);
+    
 };
 class Value{
     std::string name;
@@ -52,6 +56,11 @@ class Value{
     Userlist* userlist;
 
 };
-class User{
+class User:public Value{
+    
+    using Useptr=std::unique_ptr<Use>;
+    std::vector<Useptr> UseList;
+    void addUse(Value* val);
+    //TODO finish this class
 
 };
