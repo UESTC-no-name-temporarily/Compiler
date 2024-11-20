@@ -53,8 +53,8 @@ public:
     bool isPrimitive() const {
         return isInteger() || isFloatingPoint();
     }
-    virtual bool isSameType(const Type& other) const = 0;
-    
+    virtual bool isSameType(const Type& other) const ;
+    virtual TypeID getTypeID() const;
 };
 
 class IntegerType : public Type {

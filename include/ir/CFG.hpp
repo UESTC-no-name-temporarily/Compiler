@@ -13,94 +13,168 @@ class Variable:public User{
 class AllocaInst:public Inst{
     Type* type;
     int num;
-    AllocaInst(Type* _type,int _num):type(_type),num(_num){
-        itype=InstType::Alloca;
+    AllocaInst(std::string name, Type* _type, int _num)
+        : Inst(std::move(name), _type, InstType::Alloca), num(_num) {}
+    Type* getType() const { return type; }
+    int getNum() const { return num; }
+
+    void dump() const override {
+        std::cout << "AllocaInst: Name = " << GetName()
+                  << ", Type = " << getType()->getTypeID()
+                  << ", Num = " << num << "\n";
     }
-    Type* getType();
-    int getNum();
 };
-class StoreInst:public Inst{
+
+class StoreInst : public Inst {
+    Value* value;   // 要存储的值
+    Value* pointer; // 存储的地址
+
+public:
+    StoreInst(std::string name, Type* _type, Value* _value, Value* _pointer)
+        : Inst(std::move(name), _type, InstType::Store), value(_value), pointer(_pointer) {}
+
+    Value* getValue() const { return value; }
+    Value* getPointer() const { return pointer; }
+
+    void dump() const override {
+        std::cout << "StoreInst: Value = " << value->GetName()
+                  << ", Pointer = " << pointer->GetName() << "\n";
+    }
+};
+
+class LoadInst : public Inst {
+    Value* pointer; // 要加载的地址
+
+public:
+    LoadInst(std::string name, Type* _type, Value* _pointer)
+        : Inst(std::move(name), _type, InstType::Load), pointer(_pointer) {}
+
+    Value* getPointer() const { return pointer; }
+
+    void dump() const override {
+        std::cout << "LoadInst: Pointer = " << pointer->GetName() << "\n";
+    }
+};
+
+class CallInst : public Inst {
+    Func* func;                    // 被调用的函数
+    std::vector<Value*> arguments; // 参数列表
+
+public:
+    CallInst(std::string name, Type* _type, Func* _func, std::vector<Value*> _args)
+        : Inst(std::move(name), _type, InstType::Call), func(_func), arguments(std::move(_args)) {}
+
+    Func* getFunc() const { return func; }
+    const std::vector<Value*>& getArgs() const { return arguments; }
+
+    void dump() const override {
+        std::cout << "CallInst: Func = " << func->GetName()
+                  << ", Args = [";
+        for (const auto& arg : arguments) {
+            std::cout << arg->GetName() << ", ";
+        }
+        std::cout << "]\n";
+    }
+};
+
+class CondInst : public Inst {
+    Value* condition;
+    BasicBlock* thenBlock;
+    BasicBlock* elseBlock;
+
+public:
+    CondInst(std::string name, Type* _type, Value* _cond, BasicBlock* _then, BasicBlock* _else)
+        : Inst(std::move(name), _type, InstType::Cond), condition(_cond), thenBlock(_then), elseBlock(_else) {}
+
+    Value* getCond() const { return condition; }
+    BasicBlock* getThen() const { return thenBlock; }
+    BasicBlock* getEls() const { return elseBlock; }
+
+    void dump() const override {
+        std::cout << "CondInst: Cond = " << condition->GetName()
+                  << ", Then = " << thenBlock->GetName()
+                  << ", Else = " << elseBlock->GetName() << "\n";
+    }
+};
+
+class UnCondInst : public Inst {
+    BasicBlock* destBlock;
+
+public:
+    UnCondInst(std::string name, Type* _type, BasicBlock* _dest)
+        : Inst(std::move(name), _type, InstType::UnCond), destBlock(_dest) {}
+
+    BasicBlock* getDest() const { return destBlock; }
+
+    void dump() const override {
+        std::cout << "UnCondInst: Dest = " << destBlock->GetName() << "\n";
+    }
+};
+
+class RetInst : public Inst {
+    Value* returnValue;
+
+public:
+    RetInst(std::string name, Type* _type, Value* _value)
+        : Inst(std::move(name), _type, InstType::Ret), returnValue(_value) {}
+
+    Value* getValue() const { return returnValue; }
+
+    void dump() const override {
+        std::cout << "RetInst: Value = " << (returnValue ? returnValue->GetName() : "void") << "\n";
+    }
+};
+
+class ZextInst : public Inst {
     Value* value;
-    Value* pointer;
-    StoreInst(Value* _value,Value* _pointer):value(_value),pointer(_pointer){
-        itype=InstType::Store;
+
+public:
+    ZextInst(std::string name, Type* _type, Value* _value)
+        : Inst(std::move(name), _type, InstType::Zext), value(_value) {}
+
+    Value* getValue() const { return value; }
+
+    void dump() const override {
+        std::cout << "ZextInst: Value = " << value->GetName() << "\n";
     }
-    Value* getValue();
-    Value* getPointer();
 };
-class LoadInst:public Inst{
-    Value* pointer;
-    LoadInst(Value* _pointer):pointer(_pointer){
-        itype=InstType::Load;
-    }
-    Value* getPointer();
-};
-class CallInst:public Inst{
-    Func* func;
-    std::vector<Value*> args;
-    CallInst(Func* _func,std::vector<Value*> _args):func(_func),args(_args){
-        itype=InstType::Call;
-    }
-    Func* getFunc();
-    std::vector<Value*> getArgs();
-};
-class CondInst:public Inst{
-    Value* cond;
-    BasicBlock* then;
-    BasicBlock* els;
-    CondInst(Value* _cond,BasicBlock* _then,BasicBlock* _els):cond(_cond),then(_then),els(_els){
-        itype=InstType::Cond;
-    }
-    Value* getCond();
-    BasicBlock* getThen();
-    BasicBlock* getEls();
-};
-class UnCondInst:public Inst{
-    BasicBlock* dest;
-    UnCondInst(BasicBlock* _dest):dest(_dest){
-        itype=InstType::UnCond;
-    }
-    BasicBlock* getDest();
-};
-class RetInst:public Inst{
+
+class SextInst : public Inst {
     Value* value;
-    RetInst(Value* _value):value(_value){
-        itype=InstType::Ret;
+
+public:
+    SextInst(std::string name, Type* _type, Value* _value)
+        : Inst(std::move(name), _type, InstType::Sext), value(_value) {}
+
+    Value* getValue() const { return value; }
+
+    void dump() const override {
+        std::cout << "SextInst: Value = " << value->GetName() << "\n";
     }
-    Value* getValue();
 };
-class BinaryInst:public Inst{
-    Value* lhs;
-    Value* rhs;
-    BinaryInst(Value* _lhs,Value* _rhs){
-        lhs=_lhs;
-        rhs=_rhs;
+
+class PhiInst : public Inst {
+    std::vector<Value*> incomingValues;
+    std::vector<BasicBlock*> incomingBlocks;
+
+public:
+    PhiInst(std::string name, Type* _type, std::vector<Value*> _values, std::vector<BasicBlock*> _blocks)
+        : Inst(std::move(name), _type, InstType::Phi), incomingValues(std::move(_values)), incomingBlocks(std::move(_blocks)) {}
+
+    const std::vector<Value*>& getValues() const { return incomingValues; }
+    const std::vector<BasicBlock*>& getBlocks() const { return incomingBlocks; }
+
+    void dump() const override {
+        std::cout << "PhiInst: Values = [";
+        for (const auto& val : incomingValues) {
+            std::cout << val->GetName() << ", ";
+        }
+        std::cout << "], Blocks = [";
+        for (const auto& blk : incomingBlocks) {
+            std::cout << blk->GetName() << ", ";
+        }
+        std::cout << "]\n";
     }
-    Value* getLhs();
-    Value* getRhs();
-};
-class ZextInst:public Inst{
-    Value* value;
-    ZextInst(Value* _value):value(_value){
-        itype=InstType::Zext;
-    }
-    Value* getValue();
-};//Zero extend进行零扩展
-class SextInst:public Inst{
-    Value* value;
-    SextInst(Value* _value):value(_value){
-        itype=InstType::Sext;
-    }
-    Value* getValue();
-};//Sign extend进行符号扩展
-class PhiInst:public Inst{
-    std::vector<Value*> values;
-    std::vector<BasicBlock*> blocks;
-    PhiInst(std::vector<Value*> _values,std::vector<BasicBlock*> _blocks):values(_values),blocks(_blocks){
-        itype=InstType::Phi;
-    }
-    std::vector<Value*> getValues();
-    std::vector<BasicBlock*> getBlocks();
 };
 
 class Inst:public User{
@@ -109,124 +183,148 @@ public:
     {
         None,
         // Terminators
-        UnCond,
-        Cond,
-        Ret,
+        UnCond,Cond,Ret,
         // Memory
-        Alloca,
-        Load,
-        Store,
-        Memcpy,
+        Alloca,Load,Store,Memcpy,
         // Binary
-        Add,
-        Sub,
-        Mul,
-        Div,
-        Mod,
-        And,
-        Or,
-        Xor,
-        Eq,
-        Ne,
-        Ge,
-        L,
-        Le,
-        G,
+        Add,Sub,Mul,Div,Mod,
+        And,Or,Xor,Eq,Ne,Ge,L,Le,G,
         // Other
-        Gep,
-        Phi,
-        Call,
-        Zext,
-        Sext,
-        Trunc,
-        FP2SI,
-        SI2FP,
-        BinaryUnknown,
-        Max,
-        Min,
-        Select,
+        Gep,Phi,Call,Zext,Sext,Trunc,
+        FP2SI,SI2FP,BinaryUnknown,Max,Min,Select,
     };
 
-    InstType itype;
-    bool HasSideEffect();
+    InstType itype=InstType::None;
+
+    Inst() = default;  // 默认构造函数
+    explicit Inst(std::string name, Type* type, InstType _itype) : User(std::move(name), type), itype(_itype) {}  // 指定类型的构造函数
+    virtual ~Inst() = default;  // 虚析构函数保证子类的正确析构
+
+    InstType getType() const { return itype; }
+
+    virtual void dump() const {
+        std::cout << "Inst: " << static_cast<int>(itype) << std::endl;
+    }
+    virtual bool HasSideEffect(){return false;};
     
 };
 
 class BasicBlock:public Value{
-    BasicBlock()=default;
-    ~BasicBlock()=default;
-    using Instptr=std::unique_ptr<Inst>;
-    std::vector<Instptr> InstList;
+    
+    std::vector<std::unique_ptr<Inst>> instList;
     BasicBlock* next=nullptr;
     BasicBlock* prev=nullptr;
-    public:
-    void addInst(Inst* inst);
-    void deleteInst(Inst* inst);
-    void setNext(BasicBlock* _next);
-    void setPrev(BasicBlock* _prev);
-    BasicBlock* getNext();
-    BasicBlock* getPrev();
-    void print();
+public:
+    BasicBlock()=default;
+    ~BasicBlock()=default;
+    void addInst(Inst* inst) {
+        instList.emplace_back(inst);
+    }
+
+    void deleteInst(Inst* inst) {
+        auto it = std::remove_if(instList.begin(), instList.end(),
+                                 [inst](const std::unique_ptr<Inst>& i) { return i.get() == inst; });
+        if (it != instList.end())
+            instList.erase(it, instList.end());
+    }
+
+    void setNext(BasicBlock* _next) { next = _next; }
+    void setPrev(BasicBlock* _prev) { prev = _prev; }
+    BasicBlock* getNext() const { return next; }
+    BasicBlock* getPrev() const { return prev; }
+
+    void dump() const {
+        std::cout << "BasicBlock:\n";
+        for (const auto& inst : instList) {
+            inst->dump();
+        }
+    }
 };
 
-class Func:public Value{
-    Func()=default;
-    ~Func()=default;
-    int bbcount=0;
-    Func* next=nullptr;
-    Func* prev=nullptr;
-    bool has_side_effect=false;
-    using Paramptr=std::unique_ptr<Value>;
-    using BBptr=std::unique_ptr<BasicBlock>;
-    std::vector<Paramptr> ParamList;//参数列表
-    std::vector<BBptr> BBList;//基本块列表
+class Func : public Value {
+    int bbCount = 0;
+    Func* next = nullptr;
+    Func* prev = nullptr;
+    std::vector<std::unique_ptr<BasicBlock>> bbList;
+    std::vector<std::unique_ptr<Value>> paramList;
+
 public:
-    enum tag{
-        Normal,
-        UnrollBody,
-        LoopBody,
-        ParallelBody,
-        BuildIn,
+    enum Tag {
+        Normal, UnrollBody, LoopBody, ParallelBody, BuiltIn
     };
-    void addBB(BasicBlock* bb);
-    void deleteBB(BasicBlock* bb);
-    std::vector<BBptr> getBBList();
 
-    void addParam(Value* param);
-    void deleteParam(Value* param);
-    std::vector<Paramptr> getParamList();
-    
-    void setTag(tag _tag);
-    tag getTag();
-
-    void setSideEffect(bool* _has_side_effect);
-    bool hasSideEffect();
-
-    Func* getNext();
-    Func* getPrev();
-    void dump();
-};
-
-class Module{
 private:
-    using Funcptr=std::unique_ptr<Func>;
-    using GlobalVariableptr=std::unique_ptr<Variable>;
-    std::vector<Funcptr> Funclist;
-    std::vector<GlobalVariableptr> GlobalVariableList;
-public:
-    Module()=default;
-    std::set<Func*> hasinlinedFunc;
-    std::set<Func*> inlinedFunc;
-    std::set<Func*> sideeffectFunc;
-    std::vector<Funcptr> getFunclist();
-    std::vector<GlobalVariableptr> getGlobalVariableList();
+    Tag funcTag = Tag::Normal;
 
-    Func& FuncGen();
-    void deleteFunc(Func* func);
-    Func& getmain();
-    void addGlobalVariable(Variable* globalVariable);
-    void deleteGlobalVariable(Variable* globalVariable);
-    void dump();
+public:
+    Func() = default;
+    ~Func() = default;
+
+    void addBB(BasicBlock* bb) {
+        bbList.emplace_back(bb);
+        ++bbCount;
+    }
+
+    void deleteBB(BasicBlock* bb) {
+        auto it = std::remove_if(bbList.begin(), bbList.end(),
+                                 [bb](const std::unique_ptr<BasicBlock>& b) { return b.get() == bb; });
+        if (it != bbList.end()) {
+            bbList.erase(it, bbList.end());
+            --bbCount;
+        }
+    }
+
+    void addParam(Value* param) {
+        paramList.emplace_back(param);
+    }
+
+    void setTag(Tag _tag) { funcTag = _tag; }
+    Tag getTag() const { return funcTag; }
+
+    void dump() const {
+        std::cout << "Function:\n";
+        for (const auto& bb : bbList) {
+            bb->dump();
+        }
+    }
 };
+
+class Module {
+    std::vector<std::unique_ptr<Func>> funcList;
+    std::vector<std::unique_ptr<Variable>> globalVarList;
+
+public:
+    Module() = default;
+
+    void addFunc(Func* func) {
+        funcList.emplace_back(func);
+    }
+
+    void deleteFunc(Func* func) {
+        auto it = std::remove_if(funcList.begin(), funcList.end(),
+                                 [func](const std::unique_ptr<Func>& f) { return f.get() == func; });
+        if (it != funcList.end())
+            funcList.erase(it, funcList.end());
+    }
+
+    void addGlobalVariable(Variable* var) {
+        globalVarList.emplace_back(var);
+    }
+
+    void deleteGlobalVariable(Variable* var) {
+        auto it = std::remove_if(globalVarList.begin(), globalVarList.end(),
+                                 [var](const std::unique_ptr<Variable>& v) { return v.get() == var; });
+        if (it != globalVarList.end())
+            globalVarList.erase(it, globalVarList.end());
+    }
+
+    void dump() const {
+        std::cout << "Module:\n";
+        for (const auto& func : funcList) {
+            func->dump();
+        }
+    }
+};
+
 
 
