@@ -17,6 +17,11 @@ class BasicBlock;
 class Func;
 class Use{
 public:
+    Use(User* _user,Value* _value){
+        user=_user;
+        value=_value;
+        //next=nullptr;
+    }
     ~Use(){
         remove_from_Userlist(user);
     }
@@ -39,28 +44,53 @@ public:
 
 };
 class Userlist{
-    Use* head;
-    int size;
+    Use* head=nullptr;
+    int size=0;
 public:
-    void push(Use* use);
-    
+    void push_back(Use* use);
+    bool is_empty();
+    int Size();
+    Use* begin();
 };
 class Value{
     std::string name;
+    Type* type=nullptr;
+    Userlist* userlist=nullptr;
+public:
+    ~Value(){
+        if(userlist!=nullptr){
+            //TODO delete userlist
+        }
+    }
     void SetName(std::string newname);
     virtual std::string GetName();
-
-    Type* type;
     void SetType(Type* _type){ type = _type;}
     virtual Type* GetType(){return type;}
-    Userlist* userlist;
 
+    virtual bool isGlobal(){return false;}
+    virtual bool isParam(){return false;}
+    
+    void replaceAllUsesWith(Value* newvalue);
+    int getUserlistSize();
+    void addUse(User* user,Value* value);
+    void removeUse(User* user);
+
+    void dump();
 };
 class User:public Value{
-    
     using Useptr=std::unique_ptr<Use>;
     std::vector<Useptr> UseList;
+public:
+    ~User(){
+        for(auto& use:UseList){
+        //TODO delete use
+            use->remove_from_Userlist(this);
+        }
+    }
+
+    Value* getOperand(int i);
     void addUse(Value* val);
-    //TODO finish this class
+    void removeUse(Value* val);
+    void replaceUseOfWith(Value* oldval,Value* newval);
 
 };
