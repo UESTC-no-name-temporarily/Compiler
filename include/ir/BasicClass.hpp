@@ -1,6 +1,6 @@
-//TODO COPY FROM GPT5.0,NEED TO BE MODIFIED
 #pragma once
 #include <vector>
+#include <memory>
 #include <cassert>
 #include "List.hpp"
 #include <variant>
@@ -34,7 +34,8 @@ public:
     void setUsee(Value* _value){value=_value;}
     void setNext(Use* _next){next=_next;}
     Use* getNext(){return next;}
-
+    void setPrev(Use* _prev){prev=_prev;}
+    Use* getPrev(){return prev;}
     void remove_from_Userlist(User* _user){
         if (prev)
             prev->next = next;
@@ -50,7 +51,7 @@ class Userlist{
     struct Iterator {
         Use* current;
 
-        Iterator(Use* node) : current(node) {}
+        explicit Iterator(Use* node) : current(node) {}
 
         Use* operator*() const { return current; }
         Iterator& operator++() {
@@ -74,7 +75,6 @@ public:
     void push_back(Use* use);
     bool empty() const { return Size == 0; }
     int size() const { return Size; }
-    Use* begin() { return head; }
     Iterator begin() const { return Iterator(head); }
     Iterator end() const { return Iterator(nullptr); }
     void push_back(Use* use) {
@@ -91,6 +91,7 @@ public:
         }
     ++Size;
     }
+    void erase(Use* use);
 };
 class Value{
     std::string name;
@@ -111,6 +112,7 @@ public:
     virtual bool isParam(){return false;}
     
     void replaceAllUsesWith(Value* newvalue);
+    Userlist& getUserlist(){return userlist;}
     int getUserlistSize()const { return userlist.size(); };
     void addUse(User* user);
     void removeUse(User* user);

@@ -6,10 +6,42 @@
 #include "../utils/Singleton.hpp"
 #include <memory>
 #include "BasicClass.hpp"
-class Variable:public User{
-
+class Variable : public User {
+    bool isGlobalVar; // 标记是否是全局变量
+    Value* initializer; // 对于全局变量，可能会有初始值
+public:
+    // 构造函数
+    Variable(std::string name, Type* type, bool isGlobal = false, Value* init = nullptr)
+        : User(std::move(name), type), isGlobalVar(isGlobal), initializer(init) {}
+    // 判断是否是全局变量
+    bool isGlobal() const  {
+        return isGlobalVar;
+    }
+    // 获取初始化值
+    Value* getInitializer() const {
+        return initializer;
+    }
+    // 设置初始化值
+    void setInitializer(Value* init) {
+        initializer = init;
+    }
+    // 打印变量信息
+    void dump() override {
+        std::cout << "Variable: Name = " << GetName()
+                  << ", Type = " << getType()->getTypeID()
+                  << ", Global = " << (isGlobalVar ? "true" : "false");
+        if (initializer) {
+            std::cout << ", Initializer = " << initializer->GetName();
+        }
+        std::cout << "\n";
+    }
+    // 获取变量类型
+    virtual int getValueID() const override {
+        //TODO need to be modified
+    }
 };
-//TODO generate by ai, need to be modified
+
+//TODO need to be modified
 class AllocaInst:public Inst{
     Type* type;
     int num;
@@ -313,17 +345,12 @@ public:
 
     void deleteGlobalVariable(Variable* var) {
         auto it = std::remove_if(globalVarList.begin(), globalVarList.end(),
-                                 [var](const std::unique_ptr<Variable>& v) { return v.get() == var; });
+                                [var](const std::unique_ptr<Variable>& v) { return v.get() == var; });
         if (it != globalVarList.end())
             globalVarList.erase(it, globalVarList.end());
     }
 
-    void dump() const {
-        std::cout << "Module:\n";
-        for (const auto& func : funcList) {
-            func->dump();
-        }
-    }
+    void dump() const ;
 };
 
 
