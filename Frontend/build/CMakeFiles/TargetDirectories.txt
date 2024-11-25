@@ -1,0 +1,6 @@
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/main.dir
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/generate_lex.dir
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/test.dir
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/scan.dir
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/edit_cache.dir
+/home/aununo/Dev/Compiler/project/Frontend/build/CMakeFiles/rebuild_cache.dir
