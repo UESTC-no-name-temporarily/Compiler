@@ -29,24 +29,21 @@ void Value::replaceAllUsesWith(Value* newValue) {
 }
 
 void User::addUse(Value* val) {
-    if (!val) return;
-    auto use = std::make_unique<Use>(this, val);
-    val->addUse(this);  // 更新对应的 Value 的 userlist
-    UseList.push_back(std::move(use));  // 添加到自己的 UseList
+    uselist.push_back(std::make_unique<Use>(this, val));
 }
 
 void User::removeUse(Value* val) {
-    for (auto it = UseList.begin(); it != UseList.end(); ++it) {
+    for (auto it = uselist.begin(); it != uselist.end(); ++it) {
         if ((*it)->getUsee() == val) {
             val->removeUse(this);  // 从对应的 Value 的 userlist 移除
-            it = UseList.erase(it); // 从自己的 UseList 移除
+            it = uselist.erase(it); // 从自己的 uselist 移除
             break;
         }
     }
 }
 
 void User::replaceUseOfWith(Value* oldValue, Value* newValue) {
-    for (auto& use : UseList) {
+    for (auto& use : uselist) {
         if (use->getUsee() == oldValue) {
             oldValue->removeUse(this);  // 解除旧的 Value 的关联
             use->setUsee(newValue);     // 设置新的 Value

@@ -6,6 +6,7 @@
 #include "../utils/Singleton.hpp"
 #include <memory>
 #include "BasicClass.hpp"
+#include <../utils/List.hpp>
 class Variable : public User {
     bool isGlobalVar; // 标记是否是全局变量
     Value* initializer; // 对于全局变量，可能会有初始值
@@ -241,7 +242,7 @@ public:
     
 };
 
-class BasicBlock:public Value{
+class BasicBlock:public Value,public clist<BasicBlock,Inst>{
     
     std::vector<std::unique_ptr<Inst>> instList;
     BasicBlock* next=nullptr;
@@ -273,7 +274,7 @@ public:
     }
 };
 
-class Func : public Value {
+class Func : public Value,public clist<Func, BasicBlock> {
     int bbCount = 0;
     Func* next = nullptr;
     Func* prev = nullptr;
@@ -350,6 +351,11 @@ public:
             globalVarList.erase(it, globalVarList.end());
     }
 
+    std::set<Func*> hasInlinedFunc; // Func that has done inlined pass
+    std::set<Func*> inlinedFunc; // Func who is inlined by pass
+    std::set<Func*> Side_Effect_Funcs; // Func that has side effect
+
+    Func* GetmainFunc();
     void dump() const ;
 };
 

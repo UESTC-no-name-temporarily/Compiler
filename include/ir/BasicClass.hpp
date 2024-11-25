@@ -15,6 +15,7 @@ class User;
 class Value;
 class BasicBlock;
 class Func;
+// Use类，可以双向访问到User和Value
 class Use{
     User* user;
     Value* value;
@@ -72,11 +73,11 @@ public:
         }
         Size = 0;
     }
-    void push_back(Use* use);
     bool empty() const { return Size == 0; }
     int size() const { return Size; }
     Iterator begin() const { return Iterator(head); }
     Iterator end() const { return Iterator(nullptr); }
+    Use* front() const { return head; }
     void push_back(Use* use) {
         if (!use) return;
 
@@ -92,6 +93,7 @@ public:
     ++Size;
     }
     void erase(Use* use);
+
 };
 class Value{
     std::string name;
@@ -100,11 +102,11 @@ class Value{
 public:
     Value(std::string _name, Type* _type) : name(std::move(_name)), type(_type) {};
     ~Value(){
-            //遍历userlist，删除所有use
-            
+        while (!userlist.empty())
+        delete userlist.front()->getUser();  
     }
     void setName(std::string newname);
-    std::string GetName() const;
+    std::string GetName() const{return name;};
 
     virtual Type* getType(){return type;}
 
@@ -123,21 +125,17 @@ public:
 };
 class User:public Value{
     using Useptr=std::unique_ptr<Use>;
-    std::vector<Useptr> UseList;
+    std::vector<Useptr> uselist;
 public:
     User(std::string name, Type* type) : Value(std::move(name), type) {};
-    virtual ~User(){
-        for(auto& use:UseList){
-        //TODO delete use
-            use->remove_from_Userlist(this);
-        }
-    }
-
-    Value* getOperand(int i) const {
-        return UseList[i]->getUsee();
-    };
+    
+    Value* getOperand(int i) const {return uselist[i]->getUsee();};
     void addUse(Value* val);
     void removeUse(Value* val);
     void replaceUseOfWith(Value* oldval,Value* newval);
-    int getUseListsize() const { return UseList.size(); }
+    void ReplacePercificUseWith(Use* olduse,Value* newval);
+
+    inline Value* GetOperand(int i){return uselist[i]->getUsee();}
+    std::vector<Useptr>& getuselist() {return this->uselist; }
+    int getuselistsize() const { return uselist.size(); }
 };
