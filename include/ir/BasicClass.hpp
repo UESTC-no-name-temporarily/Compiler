@@ -100,7 +100,7 @@ class Value{
     Type* type = nullptr;
     Userlist userlist;
 public:
-    Value(std::string _name, Type* _type) : name(std::move(_name)), type(_type) {};
+    Value(std::string _name, Type* _type) : name(_name), type(_type) {};
     ~Value(){
         while (!userlist.empty())
         delete userlist.front()->getUser();  

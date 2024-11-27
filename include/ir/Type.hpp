@@ -1,90 +1,56 @@
 #pragma once
 #include <string>
-
+#include <iostream>
 enum TypeID {
         Void,
-        Integer,
-        FloatingPoint,
+        Int,
+        Float,
         Pointer,
         Array,
-        Struct,
-        Function,
-        StackStorage,
-        Invalid,
     };
     
 class Type {
-private:
-    virtual TypeID getType() const = 0;
+    TypeID id;
+    int size;
 public:
-    Type() = default;
-    Type(const Type&) = delete;
-    Type(Type&&) = delete;
-    Type& operator=(const Type&) = delete;
-    Type& operator=(Type&&) = delete;
+    Type(TypeID _id) : id(_id) {};
     virtual ~Type() = default;
-    bool isVoid() const {
-        return getType() == TypeID::Void;
-    }
-    bool isInteger() const {
-        return getType() == TypeID::Integer;
-    }
-    bool isFloatingPoint() const {
-        return getType() == TypeID::FloatingPoint;
-    }   
-    bool isPointer() const {
-        return getType() == TypeID::Pointer;
-    }
-    bool isArray() const {
-        return getType() == TypeID::Array;
-    }
-    bool isStruct() const {
-        return getType() == TypeID::Struct;
-    }       
-    bool isFunction() const {
-        return getType() == TypeID::Function;
-    }
-    bool isStackStorage() const {
-        return getType() == TypeID::StackStorage;
-    }
-    bool isInvalid() const {
-        return getType() == TypeID::Invalid;
-    }
-    bool isPrimitive() const {
-        return isInteger() || isFloatingPoint();
-    }
     virtual bool isSameType(const Type& other) const ;
     virtual TypeID getTypeID() const;
+    void setSize(int _size) {size=_size;};
+    int getSize() const {return size;};
+    virtual void print();
 };
 
-class IntegerType : public Type {
+class IntType:public Type
+{
+    IntType():Type(Int){setSize(4);}
 public:
-    TypeID getType() const override {
-        return TypeID::Integer;
-    }
-    bool isSameType(const Type& other) const override;
+    static IntType* TypeGet(){
+        static IntType single;
+        return &single;
+        };
+    void print()final{std::cout<<"int";};
 };
 
-class FloatingPointType : public Type {
+class FloatType:public Type
+{
+    FloatType():Type(Float){setSize(4);}
 public:
-    TypeID getType() const override {
-        return TypeID::FloatingPoint;
-    }
-    bool isSameType(const Type& other) const override;
+    static FloatType* TypeGet(){
+        static FloatType single;
+        return &single;
+        };
+    void print()final{std::cout<<"float";};
 };
 
-class PointerType : public Type {
+class VoidType:public Type
+{
+    VoidType():Type(Void){setSize(0);}
 public:
-    TypeID getType() const override {
-        return TypeID::Pointer;
-    }
-    bool isSameType(const Type& other) const override;
-};
-
-class ArrayType : public Type {
-public:
-    TypeID getType() const override {
-        return TypeID::Array;
-    }
-    bool isSameType(const Type& other) const override;
+    static VoidType* TypeGet(){
+        static VoidType single;
+        return &single;
+        };
+    void print()final{std::cout<<"void";};
 };

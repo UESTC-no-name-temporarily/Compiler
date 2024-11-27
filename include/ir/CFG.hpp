@@ -192,7 +192,7 @@ class PhiInst : public Inst {
 
 public:
     PhiInst(std::string name, Type* _type, std::vector<Value*> _values, std::vector<BasicBlock*> _blocks)
-        : Inst(std::move(name), _type, InstType::Phi), incomingValues(std::move(_values)), incomingBlocks(std::move(_blocks)) {}
+        : Inst(name, _type, InstType::Phi), incomingValues(std::move(_values)), incomingBlocks(std::move(_blocks)) {}
 
     const std::vector<Value*>& getValues() const { return incomingValues; }
     const std::vector<BasicBlock*>& getBlocks() const { return incomingBlocks; }
@@ -209,6 +209,13 @@ public:
         std::cout << "]\n";
     }
 };
+
+class BinaryInst : public Inst {
+//TODO need to be modified
+    Value* lhs;
+    Value* rhs;
+};
+
 
 class Inst:public User{
 public:
@@ -243,16 +250,27 @@ public:
 };
 
 class BasicBlock:public Value,public clist<BasicBlock,Inst>{
-    
+    bool visited=false;
+    bool reachable=true;
     std::vector<std::unique_ptr<Inst>> instList;
     BasicBlock* next=nullptr;
     BasicBlock* prev=nullptr;
 public:
-    BasicBlock()=default;
+    BasicBlock::BasicBlock() : Value(NULL,VoidType::TypeGet()){};
     ~BasicBlock()=default;
-    void addInst(Inst* inst) {
-        instList.emplace_back(inst);
-    }
+
+    void genAllocaInst();
+    void genStoreInst();
+    void genLoadInst();
+    void genCallInst();
+    void genCondInst();
+    void genUnCondInst();
+    void genRetInst();
+    void genZextInst();
+    void genSextInst();
+    void genPhiInst();
+
+    void addInst(Inst* inst) ;
 
     void deleteInst(Inst* inst) {
         auto it = std::remove_if(instList.begin(), instList.end(),
@@ -275,44 +293,29 @@ public:
 };
 
 class Func : public Value,public clist<Func, BasicBlock> {
-    int bbCount = 0;
-    Func* next = nullptr;
-    Func* prev = nullptr;
-    std::vector<std::unique_ptr<BasicBlock>> bbList;
-    std::vector<std::unique_ptr<Value>> paramList;
-
+    std::vector<std::unique_ptr<BasicBlock>> bbList;//基本块列表
+    std::vector<std::unique_ptr<Value>> paramList;//参数列表
+//TODO 后续可能加入内联优化等标记
 public:
-    enum Tag {
-        Normal, UnrollBody, LoopBody, ParallelBody, BuiltIn
-    };
-
-private:
-    Tag funcTag = Tag::Normal;
-
-public:
-    Func() = default;
-    ~Func() = default;
+    Func(TypeID tp,std::string name);
 
     void addBB(BasicBlock* bb) {
         bbList.emplace_back(bb);
-        ++bbCount;
     }
+    //在pred后插入ins
+    void insertBB(BasicBlock* pred,BasicBlock* ins) ;
 
     void deleteBB(BasicBlock* bb) {
         auto it = std::remove_if(bbList.begin(), bbList.end(),
                                  [bb](const std::unique_ptr<BasicBlock>& b) { return b.get() == bb; });
         if (it != bbList.end()) {
             bbList.erase(it, bbList.end());
-            --bbCount;
         }
     }
 
     void addParam(Value* param) {
         paramList.emplace_back(param);
     }
-
-    void setTag(Tag _tag) { funcTag = _tag; }
-    Tag getTag() const { return funcTag; }
 
     void dump() const {
         std::cout << "Function:\n";
@@ -328,11 +331,8 @@ class Module {
 
 public:
     Module() = default;
-
-    void addFunc(Func* func) {
-        funcList.emplace_back(func);
-    }
-
+    Func& genFunc(TypeID tp, std::string name);
+    void addFunc(Func* func) ;
     void deleteFunc(Func* func) {
         auto it = std::remove_if(funcList.begin(), funcList.end(),
                                  [func](const std::unique_ptr<Func>& f) { return f.get() == func; });
@@ -343,7 +343,6 @@ public:
     void addGlobalVariable(Variable* var) {
         globalVarList.emplace_back(var);
     }
-
     void deleteGlobalVariable(Variable* var) {
         auto it = std::remove_if(globalVarList.begin(), globalVarList.end(),
                                 [var](const std::unique_ptr<Variable>& v) { return v.get() == var; });

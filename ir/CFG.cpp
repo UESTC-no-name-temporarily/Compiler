@@ -4,8 +4,7 @@
 
 void BasicBlock::addInst(Inst* inst){
     //TODO need to be modified
-    instList.push_back(inst);
-    inst->setParent(this);
+    instList.emplace_back(inst);
 }
 void BasicBlock::deleteInst(Inst* inst){
     auto it = std::find(instList.begin(), instList.end(), inst);
@@ -21,8 +20,7 @@ void BasicBlock::dump() const{
 }
 void Func::addBB(BasicBlock* bb){
     //TODO need to be modified
-    bbList.push_back(bb);
-    bb->setParent(this);
+    bbList.emplace_back(bb);
 }
 void Func::deleteBB(BasicBlock* bb){
     auto it = std::find(bbList.begin(), bbList.end(), bb);
@@ -38,8 +36,7 @@ void Func::dump() const{
 }
 void Module::addFunc(Func* func){
     //TODO need to be modified
-    funcList.push_back(func);
-    func->setParent(this);
+    funcList.emplace_back(func);
 }
 void Module::deleteFunc(Func* func){
     auto it = std::find(funcList.begin(), funcList.end(), func);
