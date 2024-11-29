@@ -5,9 +5,9 @@ void Variable::dump() {
   Value::dump();
   if (isGlobalVar)
     std::cout << " = global ";
-  else if (isConstant)
+  else if (isConst)
     std::cout << " = constant ";
-  else /* if(isParam) */
+  else if(isParam) 
     return;
 //   auto tp = dynamic_cast<PointerType *>(GetType());
 //   tp->GetSubType()->print();
@@ -71,4 +71,36 @@ void Module::dump() const{
     for (const auto& func : funcList) {
         func->dump();
     }
+}
+void AllocaInst::dump()
+{
+        Value::dump();
+        std::cout << " = alloca ";
+        dynamic_cast<PointerType *>(type)->GetSubType()->dump();
+        std::cout << "\n";
+}
+void StoreInst::dump() {
+  std::cout << "store ";
+  for (auto &i : getuselist()) {
+    i->getUsee()->getType()->dump();
+    std::cout << " ";
+    i->getUsee()->dump();
+    if (i.get() != getuselist().back().get())
+      std::cout << ", ";
+  }
+  std::cout << '\n';
+}
+void LoadInst::dump() {
+  Value::dump();
+  std::cout << " = load ";
+  Value::getType()->dump();
+  std::cout << ", ";
+  for (auto &i : getuselist()) {
+    i->getUsee()->getType()->dump();
+    std::cout << " ";
+    i->getUsee()->dump();
+    if (i.get() != getuselist().back().get())
+      std::cout << ", ";
+  }
+  std::cout << '\n';
 }

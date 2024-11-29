@@ -8,19 +8,20 @@
 #include "BasicClass.hpp"
 #include <../utils/List.hpp>
 class Variable : public User {
-    bool isGlobalVar; // 标记是否是全局变量
-    bool isConstant;  // 标记是否是常量
-    bool isParam;    // 标记是否是参数
+    enum class VarType {
+        Global,
+        Const,
+        Param,
+    }vartype;
+    bool isGlobalVar=false;
+    bool isConst=false;
+    bool isParam=false;
     Value* initializer; // 对于全局变量，可能会有初始值
 public:
     // 构造函数
-    Variable(std::string name, Type* type, bool isGlobal = false, Value* init = nullptr)
-        : User(std::move(name), type), isGlobalVar(isGlobal), initializer(init) {}
-    // 判断是否是全局变量
-    bool isGlobal() const  {
-        return isGlobalVar;
-    }
-    // 获取初始化值
+    Variable(std::string name,VarType _vartype, Type* type, Value* init = nullptr)
+        : User(name, type),vartype(_vartype), initializer(init) {setinfo();}
+    // 获取初始化
     Value* getInitializer() const {
         return initializer;
     }
@@ -32,13 +33,13 @@ public:
     void dump() ;
     // 获取变量类型
 
-    void setinfo(bool _isGlobalVar, bool _isConstant, bool _isParam){
-        if(_isGlobalVar!=NULL)
-            isGlobalVar=_isGlobalVar;
-        if(_isConstant!=NULL)
-            isConstant=_isConstant;
-        if(_isParam!=NULL)
-            isParam=_isParam;
+    void setinfo(){
+        if(vartype==VarType::Global)
+            isGlobalVar=true;
+        if(vartype==VarType::Const)
+            isConst=true;
+        if(vartype==VarType::Param)
+            isParam=true;
     }
 
     virtual int getValueID() const override {
@@ -55,11 +56,7 @@ class AllocaInst:public Inst{
     Type* getType() const { return type; }
     int getNum() const { return num; }
 
-    void dump() const override {
-        std::cout << "AllocaInst: Name = " << GetName()
-                  << ", Type = " << getType()->getTypeID()
-                  << ", Num = " << num << "\n";
-    }
+    void AllocaInst::dump() ;
 };
 
 class StoreInst : public Inst {
@@ -73,10 +70,7 @@ public:
     Value* getValue() const { return value; }
     Value* getPointer() const { return pointer; }
 
-    void dump() const override {
-        std::cout << "StoreInst: Value = " << value->GetName()
-                  << ", Pointer = " << pointer->GetName() << "\n";
-    }
+    void dump() ;
 };
 
 class LoadInst : public Inst {
@@ -88,9 +82,7 @@ public:
 
     Value* getPointer() const { return pointer; }
 
-    void dump() const override {
-        std::cout << "LoadInst: Pointer = " << pointer->GetName() << "\n";
-    }
+    void dump() ;
 };
 
 class CallInst : public Inst {

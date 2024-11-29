@@ -19,7 +19,7 @@ public:
     virtual TypeID getTypeID() const;
     void setSize(int _size) {size=_size;};
     int getSize() const {return size;};
-    virtual void print();
+    virtual void dump() = 0;
 };
 
 class IntType:public Type
@@ -30,7 +30,7 @@ public:
         static IntType single;
         return &single;
         };
-    void print()final{std::cout<<"int";};
+    void dump()final{std::cout<<"int";};
 };
 
 class FloatType:public Type
@@ -41,7 +41,7 @@ public:
         static FloatType single;
         return &single;
         };
-    void print()final{std::cout<<"float";};
+    void dump()final{std::cout<<"float";};
 };
 
 class VoidType:public Type
@@ -52,7 +52,7 @@ public:
         static VoidType single;
         return &single;
         };
-    void print()final{std::cout<<"void";};
+    void dump()final{std::cout<<"void";};
 };
 
 class PointerType:public Type
@@ -64,6 +64,6 @@ public:
         static PointerType single(_subType);
         return &single;
         };
-    void print()final{subType->print();std::cout<<"*";};
+    void dump()final{subType->dump();std::cout<<"*";};
     Type* GetSubType() const {return subType;};
 };
