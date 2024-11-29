@@ -1,6 +1,6 @@
 #include "../include/ir/Type.hpp"
 #include "../include/ir/BasicClass.hpp"
-
+#include "./include/ir/CFG.hpp"
 void Value::setName(std::string newname){
     name=newname;
 }
@@ -19,7 +19,18 @@ void Value::removeUse(User* user) {
         }
     }
 }
-
+void Value::dump() {
+  if (isConst())
+    std::cout << GetName();
+  else if (isGlobal())
+    std::cout << "@" << GetName();
+  else if (auto tmp = dynamic_cast<Func *>(this))
+    std::cout << "@" << tmp->GetName();
+  else if (GetName() == "undef")
+    std::cout << GetName();
+  else
+    std::cout << "%" << GetName();
+}
 void Value::replaceAllUsesWith(Value* newValue) {
     while (!userlist.empty()) {
         Use* use = *userlist.begin();

@@ -103,7 +103,7 @@ public:
     Value(std::string _name, Type* _type) : name(_name), type(_type) {};
     ~Value(){
         while (!userlist.empty())
-        delete userlist.front()->getUser();  
+        delete userlist.front();
     }
     void setName(std::string newname);
     std::string GetName() const{return name;};
@@ -112,6 +112,7 @@ public:
 
     virtual bool isGlobal(){return false;}
     virtual bool isParam(){return false;}
+    virtual bool isConst(){return false;}
     
     void replaceAllUsesWith(Value* newvalue);
     Userlist& getUserlist(){return userlist;}

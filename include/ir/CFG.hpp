@@ -9,6 +9,8 @@
 #include <../utils/List.hpp>
 class Variable : public User {
     bool isGlobalVar; // 标记是否是全局变量
+    bool isConstant;  // 标记是否是常量
+    bool isParam;    // 标记是否是参数
     Value* initializer; // 对于全局变量，可能会有初始值
 public:
     // 构造函数
@@ -27,16 +29,18 @@ public:
         initializer = init;
     }
     // 打印变量信息
-    void dump() override {
-        std::cout << "Variable: Name = " << GetName()
-                  << ", Type = " << getType()->getTypeID()
-                  << ", Global = " << (isGlobalVar ? "true" : "false");
-        if (initializer) {
-            std::cout << ", Initializer = " << initializer->GetName();
-        }
-        std::cout << "\n";
-    }
+    void dump() ;
     // 获取变量类型
+
+    void setinfo(bool _isGlobalVar, bool _isConstant, bool _isParam){
+        if(_isGlobalVar!=NULL)
+            isGlobalVar=_isGlobalVar;
+        if(_isConstant!=NULL)
+            isConstant=_isConstant;
+        if(_isParam!=NULL)
+            isParam=_isParam;
+    }
+
     virtual int getValueID() const override {
         //TODO need to be modified
     }
@@ -242,9 +246,7 @@ public:
 
     InstType getType() const { return itype; }
 
-    virtual void dump() const {
-        std::cout << "Inst: " << static_cast<int>(itype) << std::endl;
-    }
+    virtual void dump() const = 0;
     virtual bool HasSideEffect(){return false;};
     
 };

@@ -54,3 +54,16 @@ public:
         };
     void print()final{std::cout<<"void";};
 };
+
+class PointerType:public Type
+{
+    Type* subType;
+    PointerType(Type* _subType):Type(Pointer),subType(_subType){setSize(4);}
+public:
+    static PointerType* TypeGet(Type* _subType){
+        static PointerType single(_subType);
+        return &single;
+        };
+    void print()final{subType->print();std::cout<<"*";};
+    Type* GetSubType() const {return subType;};
+};

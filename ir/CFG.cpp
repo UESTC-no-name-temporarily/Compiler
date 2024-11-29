@@ -1,7 +1,29 @@
 #include "./include/ir/CFG.hpp"
 #include <iostream>
 #include "./include/ir/BasicClass.hpp"
-
+void Variable::dump() {
+  Value::dump();
+  if (isGlobalVar)
+    std::cout << " = global ";
+  else if (isConstant)
+    std::cout << " = constant ";
+  else /* if(isParam) */
+    return;
+//   auto tp = dynamic_cast<PointerType *>(GetType());
+//   tp->GetSubType()->print();
+//   std::cout << " ";
+//   if (uselist.size() != 0) {
+//     auto init = GetOperand(0);
+//     if (auto array_init = dynamic_cast<Initializer *>(init))
+//       array_init->print();
+//     else
+//       // a simple const, like int x=3;
+//       // can't be Constant
+//       init->dump();
+//   } else
+//     std::cout << "zeroinitializer";
+//   std::cout << '\n';
+}
 void BasicBlock::addInst(Inst* inst){
     //TODO need to be modified
     instList.emplace_back(inst);
