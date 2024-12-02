@@ -3,9 +3,9 @@
 #include "./include/ir/BasicClass.hpp"
 void Variable::dump() {
   Value::dump();
-  if (isGlobalVar)
+  if (isGlobal())
     std::cout << " = global ";
-  else if (isConst)
+  else if (isConst())
     std::cout << " = constant ";
   else if(isParam) 
     return;

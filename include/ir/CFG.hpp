@@ -7,47 +7,76 @@
 #include <memory>
 #include "BasicClass.hpp"
 #include <../utils/List.hpp>
+class initializer : public Value {
+    union {
+        int int_val;
+        float float_val;
+    } val;
+    enum{
+        Int,
+        Float
+    }tag;
+public:
+    initializer(int _val):Value(NULL,IntType::TypeGet()),tag(Int){
+        val.int_val=_val;
+    }
+    initializer(float _val):Value(NULL,FloatType::TypeGet()),tag(Float){
+        val.float_val=_val;
+    }
+    void dump() override {
+        if(tag==Int)
+            std::cout<<val.int_val;
+        else
+            std::cout<<val.float_val;
+    }
+    int getIntVal() const {
+        return val.int_val;
+    }
+    float getFloatVal() const {
+        return val.float_val;
+    }
+    int getValueID() const override {
+        //TODO need to be modified
+    }
+};
+
 class Variable : public User {
     enum class VarType {
         Global,
         Const,
         Param,
     }vartype;
-    bool isGlobalVar=false;
-    bool isConst=false;
-    bool isParam=false;
-    Value* initializer; // 对于全局变量，可能会有初始值
+    bool isGlobal() override{
+        return vartype==VarType::Global;
+    }
+    bool isConst()  override{
+        return vartype==VarType::Const;
+    }
+    bool isParam()  override{
+        return vartype==VarType::Param;
+    }
+    initializer* init; // 对于全局变量，可能会有初始值
 public:
     // 构造函数
-    Variable(std::string name,VarType _vartype, Type* type, Value* init = nullptr)
-        : User(name, type),vartype(_vartype), initializer(init) {setinfo();}
+    Variable(std::string name,VarType _vartype, Type* _type, initializer* _init = nullptr)
+        : User(name, _type),vartype(_vartype), init(_init) {}
     // 获取初始化
-    Value* getInitializer() const {
-        return initializer;
+    initializer* getInitializer() const {
+        return init;
     }
     // 设置初始化值
-    void setInitializer(Value* init) {
-        initializer = init;
+    void setInitializer(initializer* _init) {
+        init = _init;
     }
     // 打印变量信息
     void dump() ;
     // 获取变量类型
-
-    void setinfo(){
-        if(vartype==VarType::Global)
-            isGlobalVar=true;
-        if(vartype==VarType::Const)
-            isConst=true;
-        if(vartype==VarType::Param)
-            isParam=true;
-    }
 
     virtual int getValueID() const override {
         //TODO need to be modified
     }
 };
 
-//TODO need to be modified
 class AllocaInst:public Inst{
     Type* type;
     int num;
@@ -84,7 +113,7 @@ public:
 
     void dump() ;
 };
-
+//TODO need to be modified
 class CallInst : public Inst {
     Func* func;                    // 被调用的函数
     std::vector<Value*> arguments; // 参数列表
@@ -210,8 +239,11 @@ class BinaryInst : public Inst {
 //TODO need to be modified
     Value* lhs;
     Value* rhs;
+public:
+    BinaryInst(Value* _lhs, Value* _rhs, std::string name, Type* _type, InstType _itype)
+        : Inst(name, _type, _itype), lhs(_lhs), rhs(_rhs) {}
+    void dump() ;
 };
-
 
 class Inst:public User{
 public:
@@ -245,10 +277,9 @@ public:
 
 class BasicBlock:public Value,public clist<BasicBlock,Inst>{
     bool visited=false;
-    bool reachable=true;
     std::vector<std::unique_ptr<Inst>> instList;
-    BasicBlock* next=nullptr;
-    BasicBlock* prev=nullptr;
+    std::vector<std::unique_ptr<BasicBlock>> nextList;
+    std::vector<std::unique_ptr<BasicBlock>> prevList;
 public:
     BasicBlock::BasicBlock() : Value(NULL,VoidType::TypeGet()){};
     ~BasicBlock()=default;
@@ -273,10 +304,10 @@ public:
             instList.erase(it, instList.end());
     }
 
-    void setNext(BasicBlock* _next) { next = _next; }
-    void setPrev(BasicBlock* _prev) { prev = _prev; }
-    BasicBlock* getNext() const { return next; }
-    BasicBlock* getPrev() const { return prev; }
+    void addNext(BasicBlock* _next) { nextList.emplace_back(_next); }
+    void addPrev(BasicBlock* _prev) { prevList.emplace_back(_prev); }
+    std::vector<std::unique_ptr<BasicBlock>>& getNext() { return nextList; }
+    std::vector<std::unique_ptr<BasicBlock>>& getPrev() { return prevList; }
 
     void dump() const {
         std::cout << "BasicBlock:\n";

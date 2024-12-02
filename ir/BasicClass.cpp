@@ -7,6 +7,7 @@ void Value::setName(std::string newname){
 void Value::addUse(User* user) {
     Use *use = new Use(user, this);
     userlist.push_back(use);
+    user->addUse(this);
 }
 
 void Value::removeUse(User* user) {

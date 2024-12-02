@@ -109,11 +109,11 @@ public:
     std::string GetName() const{return name;};
 
     virtual Type* getType(){return type;}
-
-    virtual bool isGlobal(){return false;}
-    virtual bool isParam(){return false;}
-    virtual bool isConst(){return false;}
     
+    virtual bool isConst() { return false; }
+    virtual bool isGlobal() { return false; }
+    virtual bool isParam() { return false; }
+
     void replaceAllUsesWith(Value* newvalue);
     Userlist& getUserlist(){return userlist;}
     int getUserlistSize()const { return userlist.size(); };
@@ -128,15 +128,18 @@ class User:public Value{
     using Useptr=std::unique_ptr<Use>;
     std::vector<Useptr> uselist;
 public:
-    User(std::string name, Type* type) : Value(std::move(name), type) {};
-    
-    Value* getOperand(int i) const {return uselist[i]->getUsee();};
+    User(std::string name, Type* type) : Value(name, type) {};
+    ~User(){
+        for(auto& use:uselist){
+            use->~Use();
+        }
+        delete this;
+    }
     void addUse(Value* val);
     void removeUse(Value* val);
     void replaceUseOfWith(Value* oldval,Value* newval);
     void ReplacePercificUseWith(Use* olduse,Value* newval);
 
-    inline Value* GetOperand(int i){return uselist[i]->getUsee();}
     std::vector<Useptr>& getuselist() {return this->uselist; }
     int getuselistsize() const { return uselist.size(); }
 };
