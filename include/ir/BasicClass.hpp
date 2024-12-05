@@ -101,6 +101,7 @@ class Value{
     Userlist userlist;
 public:
     Value(std::string _name, Type* _type) : name(_name), type(_type) {};
+    Value(Type* _type) : name(NULL), type(_type) {};
     ~Value(){
         while (!userlist.empty())
         delete userlist.front();
@@ -129,6 +130,7 @@ class User:public Value{
     std::vector<Useptr> uselist;
 public:
     User(std::string name, Type* type) : Value(name, type) {};
+    User(Type* type) : Value(type) {};
     ~User(){
         for(auto& use:uselist){
             use->~Use();

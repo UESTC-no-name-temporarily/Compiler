@@ -4,20 +4,6 @@
 #include<algorithm>
 #include<vector>
 
-template<typename T>
-class List:public std::list<std::unique_ptr<T>>
-{
-    using _List=std::list<std::unique_ptr<T>>;
-    using DataType=std::unique_ptr<T>;
-    public:
-    void push_front(T* data){
-        _List::push_front(DataType(data));
-    }
-    void push_back(T* data){
-        _List::push_back(DataType(data));
-    }
-};
-
 template<typename _list,typename _list_node>
 class list_node;
 //custom list,客制化列表
@@ -26,7 +12,7 @@ class clist;
 
 template<typename _list,typename _list_node>
 class list_node{
-    friend class ex_list<_list,_list_node>;
+    friend class clist<_list,_list_node>;
     
     _list_node* prev;
     _list_node* next;
@@ -137,7 +123,7 @@ class clist
         bool operator==(const iterator& other)const{return ptr==other.ptr;}
         bool operator!=(const iterator& other)const{return ptr!=other.ptr;}
     };
-    mylist(){
+    clist(){
         this->head=nullptr;
         this->tail=nullptr;
     }
@@ -176,10 +162,6 @@ class clist
     int Size(){
         return size;
     }
-    // 以后再说
-    // void merge(_list*& other){
-    //     other=nullptr;
-    // }
 
     void push_back(_list_node* data){
         data->SetParent(dynamic_cast<_list*>(this));

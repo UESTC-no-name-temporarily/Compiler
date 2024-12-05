@@ -7,6 +7,32 @@
 #include <memory>
 #include "BasicClass.hpp"
 #include <../utils/List.hpp>
+
+class constInt:public Value{
+    int val;
+    constInt(int _val):Value(IntType::TypeGet()),val(_val){};
+    int getval() const {return val;}
+    void dump() override {
+        std::cout<<val;
+    }
+};
+
+class constFloat:public Value{
+    float val;
+    constFloat(float _val):Value(FloatType::TypeGet()),val(_val){};
+    float getval() const {return val;}
+    void dump() override {
+        std::cout<<val;
+    }
+};
+
+class constVoid:public Value{
+    constVoid():Value(VoidType::TypeGet()){};
+    void dump() override {
+        std::cout<<"void";
+    }
+    
+};
 class initializer : public Value {
     union {
         int int_val;
@@ -183,33 +209,33 @@ public:
     }
 };
 
-class ZextInst : public Inst {
-    Value* value;
+// class ZextInst : public Inst {
+//     Value* value;
 
-public:
-    ZextInst(std::string name, Type* _type, Value* _value)
-        : Inst(std::move(name), _type, InstType::Zext), value(_value) {}
+// public:
+//     ZextInst(std::string name, Type* _type, Value* _value)
+//         : Inst(std::move(name), _type, InstType::Zext), value(_value) {}
 
-    Value* getValue() const { return value; }
+//     Value* getValue() const { return value; }
 
-    void dump() const override {
-        std::cout << "ZextInst: Value = " << value->GetName() << "\n";
-    }
-};
+//     void dump() const override {
+//         std::cout << "ZextInst: Value = " << value->GetName() << "\n";
+//     }
+// };
 
-class SextInst : public Inst {
-    Value* value;
+// class SextInst : public Inst {
+//     Value* value;
 
-public:
-    SextInst(std::string name, Type* _type, Value* _value)
-        : Inst(std::move(name), _type, InstType::Sext), value(_value) {}
+// public:
+//     SextInst(std::string name, Type* _type, Value* _value)
+//         : Inst(std::move(name), _type, InstType::Sext), value(_value) {}
 
-    Value* getValue() const { return value; }
+//     Value* getValue() const { return value; }
 
-    void dump() const override {
-        std::cout << "SextInst: Value = " << value->GetName() << "\n";
-    }
-};
+//     void dump() const override {
+//         std::cout << "SextInst: Value = " << value->GetName() << "\n";
+//     }
+// };
 
 class PhiInst : public Inst {
     std::vector<Value*> incomingValues;
@@ -237,11 +263,9 @@ public:
 
 class BinaryInst : public Inst {
 //TODO need to be modified
-    Value* lhs;
-    Value* rhs;
 public:
     BinaryInst(Value* _lhs, Value* _rhs, std::string name, Type* _type, InstType _itype)
-        : Inst(name, _type, _itype), lhs(_lhs), rhs(_rhs) {}
+        : Inst(name, _type, _itype) {}
     void dump() ;
 };
 
@@ -265,7 +289,8 @@ public:
     InstType itype=InstType::None;
 
     Inst() = default;  // 默认构造函数
-    explicit Inst(std::string name, Type* type, InstType _itype) : User(std::move(name), type), itype(_itype) {}  // 指定类型的构造函数
+    Inst(std::string name, Type* type, InstType _itype) : User(std::move(name), type), itype(_itype) {}  // 指定类型的构造函数
+    Inst(Type* type, InstType _itype) : User(NULL, type), itype(_itype) {}
     virtual ~Inst() = default;  // 虚析构函数保证子类的正确析构
 
     InstType getType() const { return itype; }
@@ -275,11 +300,9 @@ public:
     
 };
 
-class BasicBlock:public Value,public clist<BasicBlock,Inst>{
+class BasicBlock:public Value,public clist<BasicBlock,Inst>,public list_node<Func,BasicBlock>{
     bool visited=false;
     std::vector<std::unique_ptr<Inst>> instList;
-    std::vector<std::unique_ptr<BasicBlock>> nextList;
-    std::vector<std::unique_ptr<BasicBlock>> prevList;
 public:
     BasicBlock::BasicBlock() : Value(NULL,VoidType::TypeGet()){};
     ~BasicBlock()=default;
@@ -303,11 +326,6 @@ public:
         if (it != instList.end())
             instList.erase(it, instList.end());
     }
-
-    void addNext(BasicBlock* _next) { nextList.emplace_back(_next); }
-    void addPrev(BasicBlock* _prev) { prevList.emplace_back(_prev); }
-    std::vector<std::unique_ptr<BasicBlock>>& getNext() { return nextList; }
-    std::vector<std::unique_ptr<BasicBlock>>& getPrev() { return prevList; }
 
     void dump() const {
         std::cout << "BasicBlock:\n";
@@ -351,18 +369,16 @@ public:
 };
 
 class Module {
-    std::vector<std::unique_ptr<Func>> funcList;
     std::vector<std::unique_ptr<Variable>> globalVarList;
 
 public:
     Module() = default;
     Func& genFunc(TypeID tp, std::string name);
-    void addFunc(Func* func) ;
+    void addFunc(Func* func) {
+        //TODO need to be modified
+    }
     void deleteFunc(Func* func) {
-        auto it = std::remove_if(funcList.begin(), funcList.end(),
-                                 [func](const std::unique_ptr<Func>& f) { return f.get() == func; });
-        if (it != funcList.end())
-            funcList.erase(it, funcList.end());
+        //TODO need to be modified
     }
 
     void addGlobalVariable(Variable* var) {
