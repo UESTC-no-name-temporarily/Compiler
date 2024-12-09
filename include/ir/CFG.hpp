@@ -7,7 +7,7 @@
 #include <memory>
 #include "BasicClass.hpp"
 #include <../utils/List.hpp>
-
+#include "../lib/magic_enum.hpp"
 class constInt:public Value{
     int val;
     constInt(int _val):Value(IntType::TypeGet()),val(_val){};
@@ -33,6 +33,7 @@ class constVoid:public Value{
     }
     
 };
+
 class initializer : public Value {
     union {
         int int_val;
@@ -97,10 +98,6 @@ public:
     // 打印变量信息
     void dump() ;
     // 获取变量类型
-
-    virtual int getValueID() const override {
-        //TODO need to be modified
-    }
 };
 
 class AllocaInst:public Inst{
@@ -262,11 +259,19 @@ public:
 };
 
 class BinaryInst : public Inst {
-//TODO need to be modified
+    Value* lhs;
+    Value* rhs;
+
 public:
     BinaryInst(Value* _lhs, Value* _rhs, std::string name, Type* _type, InstType _itype)
-        : Inst(name, _type, _itype) {}
-    void dump() ;
+        : Inst(name, _type, _itype), lhs(_lhs), rhs(_rhs) {}
+
+    Value* getLHS() const { return lhs; }
+    Value* getRHS() const { return rhs; }
+
+    void dump() const override {
+        //TODO need to be modified
+    }
 };
 
 class Inst:public User{
@@ -298,15 +303,23 @@ public:
     virtual void dump() const = 0;
     virtual bool HasSideEffect(){return false;};
     
+    std::string InstTypeToString() const {
+        auto type = magic_enum::enum_name(itype);
+        return std::string(type);
+    } 
 };
 
 class BasicBlock:public Value,public clist<BasicBlock,Inst>,public list_node<Func,BasicBlock>{
     bool visited=false;
-    std::vector<std::unique_ptr<Inst>> instList;
+    std::vector<BasicBlock*> next_bb;
+    std::vector<BasicBlock*> prev_bb;
 public:
     BasicBlock::BasicBlock() : Value(NULL,VoidType::TypeGet()){};
     ~BasicBlock()=default;
-
+    std::vector<BasicBlock*>& getNext();
+    std::vector<BasicBlock*>& getPrev();
+    void setVisited(bool _v) { visited = _v; }
+    bool checkVisited() { visited = false; }
     void genAllocaInst();
     void genStoreInst();
     void genLoadInst();
@@ -320,55 +333,38 @@ public:
 
     void addInst(Inst* inst) ;
 
-    void deleteInst(Inst* inst) {
-        auto it = std::remove_if(instList.begin(), instList.end(),
-                                 [inst](const std::unique_ptr<Inst>& i) { return i.get() == inst; });
-        if (it != instList.end())
-            instList.erase(it, instList.end());
-    }
+    void deleteInst(Inst* inst) ;
 
-    void dump() const {
-        std::cout << "BasicBlock:\n";
-        for (const auto& inst : instList) {
-            inst->dump();
-        }
-    }
+    void dump() const ;
 };
 
-class Func : public Value,public clist<Func, BasicBlock> {
-    std::vector<std::unique_ptr<BasicBlock>> bbList;//基本块列表
+class Func : public Value,public clist<Func, BasicBlock>,public list_node<Module,Func>{
     std::vector<std::unique_ptr<Value>> paramList;//参数列表
 //TODO 后续可能加入内联优化等标记
 public:
     Func(TypeID tp,std::string name);
 
     void addBB(BasicBlock* bb) {
-        bbList.emplace_back(bb);
+        push_back(bb);
     }
     //在pred后插入ins
     void insertBB(BasicBlock* pred,BasicBlock* ins) ;
 
-    void deleteBB(BasicBlock* bb) {
-        auto it = std::remove_if(bbList.begin(), bbList.end(),
-                                 [bb](const std::unique_ptr<BasicBlock>& b) { return b.get() == bb; });
-        if (it != bbList.end()) {
-            bbList.erase(it, bbList.end());
-        }
-    }
+    void deleteBB(BasicBlock* bb) ;
 
     void addParam(Value* param) {
         paramList.emplace_back(param);
     }
 
-    void dump() const {
+    void dump() {
         std::cout << "Function:\n";
-        for (const auto& bb : bbList) {
-            bb->dump();
+        for (auto it = begin(); it != end(); ++it) {
+            (*it)->dump();
         }
     }
 };
 
-class Module {
+class Module : public clist<Module,Func>{
     std::vector<std::unique_ptr<Variable>> globalVarList;
 
 public:
