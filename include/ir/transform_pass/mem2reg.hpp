@@ -4,15 +4,13 @@
 #include <algorithm>
 #include "../BasicClass.hpp"
 #include "../CFG.hpp"
-class Mem2Reg {
+#include "../New_passManager.hpp"
+class Mem2Reg :public PassBase<Mem2Reg, Func> {
     Func *func;
     Mem2Reg(Func &F) {
         func = &F;
     }
-    
+    void promoteMemoryToRegister(Func &F);
 public:
     void run();
-private:
-    void promoteMemoryToRegister(Func &F);
-
 };

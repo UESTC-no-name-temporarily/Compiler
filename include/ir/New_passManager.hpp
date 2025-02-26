@@ -23,7 +23,7 @@
 // #include "LoopRotate.hpp"
 // #include "LoopSimplify.hpp"
 // #include "LoopUnroll.hpp"
-#include "PassManagerBase.hpp"
+#include "PassBase.hpp"
 // #include "PromoteMemtoRegister.hpp"
 // #include "SSAPRE.hpp"
 // #include "SelfStoreElimination.hpp"
@@ -47,6 +47,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 enum OptLevel { O0 = 0, O1 = 1, O2 = 2, O3 = 3 };
 enum PassName {
@@ -131,7 +132,7 @@ enum LoopAttr {
 };
 
 class _AnalysisManager
-    : public _AnalysisManagerBase<_AnalysisManager, Function> {
+    : public AnalysisBase<_AnalysisManager, Func> {
 private:
   std::vector<std::any> Contain;
   std::vector<LoopInfo *> loops;
@@ -143,8 +144,8 @@ public:
   virtual ~_AnalysisManager() = default;
   template <typename Pass, typename... Args,
             typename name = std::enable_if_t<
-                std::is_base_of_v<_AnalysisManagerBase<Pass, Function>, Pass>>>
-  Pass *get(Function *func, Args &&...args) {
+                std::is_base_of_v<AnalysisBase<Pass, Func>, Pass>>>
+  Pass *get(Func *func, Args &&...args) {
     auto it =
         std::find_if(Contain.begin(), Contain.end(), [&](const std::any &ele) {
           return ele.type() == typeid(Pass *);
@@ -185,7 +186,7 @@ public:
 
   template <typename Pass, typename... Args,
             typename name = std::enable_if_t<
-                std::is_base_of_v<_AnalysisManagerBase<Pass, Module>, Pass>>>
+                std::is_base_of_v<AnalysisBase<Pass, Module>, Pass>>>
   Pass *get(Module *mod, Args &&...args) {
     auto pass = new Pass(mod, std::forward<Args>(args)...);
     auto *result = pass->GetResult();
@@ -194,7 +195,7 @@ public:
   }
 };
 
-class _PassManager : public _PassManagerBase<_PassManager, Function> {
+class _PassManager : public PassBase<_PassManager, Func> {
 public:
   _PassManager() { module = &Singleton<Module>(); }
   virtual ~_PassManager() = default;
@@ -202,13 +203,13 @@ public:
   void RunOnLevel();
   void RunOnTest();
   template <typename Pass, typename name = std::enable_if_t<std::is_base_of_v<
-                               _PassManagerBase<Pass, Function>, Pass>>>
-  bool RunImpl(Function *func, _AnalysisManager &AM) {
+                               PassBase<Pass, Func>, Pass>>>
+  bool RunImpl(Func *func, _AnalysisManager &AM) {
     auto pass = std::make_unique<Pass>(func, AM);
     return pass->Run();
   }
   template <typename Pass, typename name = std::enable_if_t<std::is_base_of_v<
-                               _PassManagerBase<Pass, Module>, Pass>>>
+                               PassBase<Pass, Module>, Pass>>>
   bool RunImpl(Module *mod, _AnalysisManager &AM) {
     auto pass = std::make_unique<Pass>(mod, AM);
     return pass->Run();
@@ -223,7 +224,7 @@ private:
   void AddPass(PassName pass) { EnablePass.push(pass); }
   std::queue<PassName> EnablePass;
   Module *module;
-  Function *curfunc;
+  Func *curfunc;
   bool modified = true;
   bool other = false;
   bool HasRunCondMerge = false;

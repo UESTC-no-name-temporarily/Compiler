@@ -1,23 +1,18 @@
 #pragma once
 #include "./CFG.hpp"
 
-template <typename Pass, typename DerivedT> class _AnalysisManagerBase {
-private:
-  void InitPass(Pass pass);
-
+template <typename Pass, typename DerivedT> class AnalysisBase {
 public:
-  _AnalysisManagerBase() = default;
+  virtual bool Run() = 0;
+  AnalysisBase() = default;
   virtual const Pass *GetResult(DerivedT *func) const { return nullptr; }
   const Pass *derived_this() const { return static_cast<const Pass *>(this); }
 };
 
-template <typename Pass, typename Scope> class _PassManagerBase {
-private:
-  void InitPass(Pass pass);
-
+template <typename Pass, typename Scope> class PassBase {
 public:
   virtual bool Run() = 0;
-  _PassManagerBase() = default;
+  PassBase() = default;
   const Pass *derived_this() const { return static_cast<const Pass *>(this); }
 };
 
