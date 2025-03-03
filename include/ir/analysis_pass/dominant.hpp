@@ -4,33 +4,42 @@
 #include <string>
 #include <algorithm>
 #include <unordered_map>
-#include <stack>
+#include <unordered_set>
+#include <queue>
 #include "../BasicClass.hpp"
 #include "../Type.hpp"
 #include "../CFG.hpp"
-#include "../passManager.hpp"
+#include "../New_passManager.hpp"
+#include "PassBase.hpp"
 
-class dominant : public AnalysisPassManager {
+class dominant : public AnalysisBase<dominant, Func> {
 public:
-    struct Node {
-        int id;
-        Node* idom = nullptr;     // 直接支配节点
-        Node* semi = nullptr;     // 半支配节点
-        Node* parent = nullptr;   // DFS树父节点
-        int label = -1;           // DFS序号
-        
-        std::vector<Node*> pred;  // 前驱节点
-        std::vector<Node*> succ;  // 后继节点
-        std::vector<Node*> doms;  // 支配集合
-        
-        explicit Node(int id) : id(id) {}
+    struct DominanceResult {
+        std::unordered_map<int, int> idoms;              // bb_id -> idom_bb_id
+        std::unordered_map<int, std::vector<int>> doms;   // 支配集合
+        std::unordered_map<int, std::set<int>> dominance_frontier; // 支配边界
     };
 
 private:
-    Node* entry = nullptr;                  // 入口节点
-    std::unordered_map<int, Node*> nodes;   // 所有节点
-    std::vector<Node*> vertex;              // DFS遍历顺序
-    int dfs_time = 0;                       // DFS时间戳
+    struct Node {
+        int id;
+        Node* idom = nullptr;
+        Node* semi = nullptr;
+        Node* parent = nullptr;
+        int label = -1;
+        
+        std::vector<Node*> pred;
+        std::vector<Node*> succ;
+        std::vector<Node*> doms;
+
+        explicit Node(int id) : id(id) {}
+    };
+
+    Node* entry = nullptr;
+    std::unordered_map<int, Node*> nodes;
+    std::vector<Node*> vertex;
+    int dfs_time = 0;
+    DominanceResult* result = nullptr;
 
     // 并查集结构
     struct UnionFind {
@@ -97,30 +106,61 @@ private:
         return u;
     }
 
-public:
-    explicit dominant(Func* F) {
-        init(F);
-        run();
+    void compute_dominance_frontier() {
+        result->dominance_frontier.clear();
+        for (auto& [bb_id, node] : nodes) {
+            if (node->pred.size() > 1) {
+                for (Node* runner : node->pred) {
+                    while (runner != node->idom) {
+                        result->dominance_frontier[runner->id].insert(node->id);
+                        runner = runner->idom;
+                    }
+                }
+            }
+        }
     }
 
-    void run() {
+    void build_result() {
+        result = new DominanceResult();
+        // 转换节点指针为bb_id
+        for (auto& [bb_id, node] : nodes) {
+            if (node->idom) {
+                result->idoms[bb_id] = node->idom->id;
+            }
+            for (Node* dom : node->doms) {
+                result->doms[bb_id].push_back(dom->id);
+            }
+        }
+        compute_dominance_frontier();
+    }
+
+public:
+    explicit dominant(Func* F) { init(F); }
+    
+    ~dominant() {
+        for (auto& pair : nodes) delete pair.second;
+        delete result;
+    }
+
+    void run() override {
+        if (result) return;
         // 步骤1: DFS遍历建立序号
         dfs(entry);
         
         UnionFind uf;
         std::unordered_map<Node*, std::vector<Node*>> bucket;
-
+ 
         // 初始化并查集
         for (auto& pair : nodes) {
             Node* v = pair.second;
             uf.semi[v] = v->label;
         }
-
+ 
         // 逆序遍历处理节点
         for (auto it = vertex.rbegin(); it != vertex.rend(); ++it) {
             Node* w = *it;
             if (w == entry) continue;
-
+ 
             // 步骤2: 计算半支配者
             for (Node* v : w->pred) {
                 Node* u = eval(v, uf);
@@ -155,30 +195,33 @@ public:
             if (node->idom)
                 node->idom->doms.push_back(node);
         }
+        build_result();
     }
 
-    // 查询接口
-    Node* get_idom(int bb_id) const {
-        auto it = nodes.find(bb_id);
-        return it != nodes.end() ? it->second->idom : nullptr;
+    const DominanceResult& GetResult(Func* func) override {
+        if (!result) run();
+        return *result;
     }
 
-    const std::vector<Node*>& get_dominators(int bb_id) const {
-        static std::vector<Node*> empty;
-        auto it = nodes.find(bb_id);
-        return it != nodes.end() ? it->second->doms : empty;
-    }
-
-    // 调试输出
-    void dump() const {
-        for (auto& pair : nodes) {
-            Node* node = pair.second;
-            std::cout << "BB" << node->id << ":\n";
-            std::cout << "  idom: " << (node->idom ? node->idom->id : -1) << "\n";
-            std::cout << "  Dominates: ";
-            for (Node* d : node->doms)
-                std::cout << d->id << " ";
-            std::cout << "\n\n";
+    // 调试接口
+    void dump_dominance_frontier() const {
+        for (const auto& [bb_id, df_set] : result->dominance_frontier) {
+            std::cout << "DF(BB" << bb_id << ") = { ";
+            for (int df : df_set) 
+                std::cout << df << " ";
+            std::cout << "}\n";
         }
+    }
+
+    // Mem2Reg专用快速访问接口
+    const std::set<int>& get_dominance_frontier(int bb_id) const {
+        static std::set<int> empty;
+        auto it = result->dominance_frontier.find(bb_id);
+        return it != result->dominance_frontier.end() ? it->second : empty;
+    }
+
+    int get_idom(int bb_id) const {
+        auto it = result->idoms.find(bb_id);
+        return it != result->idoms.end() ? it->second : -1;
     }
 };
