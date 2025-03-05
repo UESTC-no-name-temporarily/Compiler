@@ -124,20 +124,20 @@ static struct option long_options[] = {
     {"O3", no_argument, 0, 3},
     {0, 0, 0, 0}};
 
-enum LoopAttr {
-  Normal,
-  Simplified,
-  Lcssa,
-  Rotate,
-};
+// enum LoopAttr {
+//   Normal,
+//   Simplified,
+//   Lcssa,
+//   Rotate,
+// };
 
 class _AnalysisManager
     : public AnalysisBase<_AnalysisManager, Func> {
 private:
   std::vector<std::any> Contain;
-  std::vector<LoopInfo *> loops;
-  std::unordered_map<BasicBlock *, std::set<LoopAttr>> LoopForm;
-  std::unordered_set<BasicBlock *> UnrollRecord;
+  //std::vector<LoopInfo *> loops;
+  //std::unordered_map<BasicBlock *, std::set<LoopAttr>> LoopForm;
+  //std::unordered_set<BasicBlock *> UnrollRecord;
 
 public:
   _AnalysisManager() = default;
@@ -160,29 +160,29 @@ public:
     return static_cast<Pass *>(result);
   }
 
-  void AddAttr(BasicBlock *LoopHeader, LoopAttr attr) {
-    LoopForm[LoopHeader].insert(attr);
-  }
+  // void AddAttr(BasicBlock *LoopHeader, LoopAttr attr) {
+  //   LoopForm[LoopHeader].insert(attr);
+  // }
 
-  void Unrolled(BasicBlock *LoopHeader) { UnrollRecord.insert(LoopHeader); }
+  // void Unrolled(BasicBlock *LoopHeader) { UnrollRecord.insert(LoopHeader); }
 
-  bool IsUnrolled(BasicBlock *LoopHeader) {
-    return UnrollRecord.find(LoopHeader) != UnrollRecord.end();
-  }
-  bool FindAttr(BasicBlock *bb, LoopAttr attr) {
-    if (LoopForm.find(bb) != LoopForm.end()) {
-      if (LoopForm[bb].find(attr) != LoopForm[bb].end())
-        return true;
-    }
-    return false;
-  }
+  // bool IsUnrolled(BasicBlock *LoopHeader) {
+  //   return UnrollRecord.find(LoopHeader) != UnrollRecord.end();
+  // }
+  // bool FindAttr(BasicBlock *bb, LoopAttr attr) {
+  //   if (LoopForm.find(bb) != LoopForm.end()) {
+  //     if (LoopForm[bb].find(attr) != LoopForm[bb].end())
+  //       return true;
+  //   }
+  //   return false;
+  // }
 
-  void ChangeLoopHeader(BasicBlock *Old, BasicBlock *New) {
-    if (LoopForm.find(Old) == LoopForm.end())
-      return;
-    LoopForm[New] = std::move(LoopForm[Old]);
-    LoopForm.erase(Old);
-  }
+  // void ChangeLoopHeader(BasicBlock *Old, BasicBlock *New) {
+  //   if (LoopForm.find(Old) == LoopForm.end())
+  //     return;
+  //   LoopForm[New] = std::move(LoopForm[Old]);
+  //   LoopForm.erase(Old);
+  // }
 
   template <typename Pass, typename... Args,
             typename name = std::enable_if_t<
@@ -199,7 +199,7 @@ class _PassManager : public PassBase<_PassManager, Func> {
 public:
   _PassManager() { module = &Singleton<Module>(); }
   virtual ~_PassManager() = default;
-  bool Run();
+  void Run();
   void RunOnLevel();
   void RunOnTest();
   template <typename Pass, typename name = std::enable_if_t<std::is_base_of_v<
