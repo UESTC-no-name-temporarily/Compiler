@@ -1,6 +1,6 @@
 #pragma once
 #include "./CFG.hpp"
-
+#include "./mem2reg.hpp"
 template <typename Pass, typename DerivedT> class AnalysisBase {
 public:
   virtual void Run() = 0;
